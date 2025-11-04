@@ -17,12 +17,27 @@
 
     let testOver = $state(false);
     let text = 'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier. Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.';
-    let textArray = $state(
-        text.split('').map((char): CharInfo => ({ char, typed: false, correct: null }))
-    );
     let tippedText = $state('');
     let currentIndex = $state(0);
     let whitelist = ['Shift'];
+    let currentRow = $state(0);
+    
+    const createTextArray = (text: string, maxCharLengthInRow: number) => {
+        let chars = text.split('').map((char): CharInfo => ({ char, typed: false, correct: null }));
+        let rows: CharInfo[][] = [];
+        let row: CharInfo[] = [];
+        chars.forEach((element, index) => {
+            row.push(element);
+            if ((index % maxCharLengthInRow === 0) && index !== 0) {
+                rows.push(row);
+                row = [];
+            }
+        });
+        
+        return rows;
+    }
+
+    let textArray = $state(createTextArray(text, 50));
 
 
     const recalcSpeed = () => {
@@ -59,29 +74,38 @@
             return;
         }
 
-        if (currentIndex > text.length) {
+        // Get row length for easier reference
+        let rowLength = textArray[currentRow]?.length || 1;
+
+        // Calculate global char index
+        let globalIndex = currentRow * rowLength + currentIndex;
+        if (globalIndex >= text.length) {
             testOver = true;
             return;
         }
 
-        if ((text.split('')[currentIndex] !== event.key)) {
-            textArray[currentIndex].correct = false;
+        if ((textArray[currentRow][currentIndex].char !== event.key)) {
+            textArray[currentRow][currentIndex].correct = false;
             falseTippedChars += 1;
             currentIndex += 1;
             accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
-            if (currentIndex >= text.length) {
+            if (globalIndex + 1 >= text.length) {
                 testOver = true;
             }
             return;
         }
 
-        textArray[currentIndex].correct = true;
+        textArray[currentRow][currentIndex].correct = true;
         correctTippedChars += 1;
         currentIndex += 1;
         accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
         recalcSpeed();
-
-        if (currentIndex >= text.length) {
+        // If last letter of row, move to next row
+        if (currentIndex >= rowLength) {
+            currentRow += 1;
+            currentIndex = 0;
+        }
+        if (globalIndex + 1 >= text.length) {
             testOver = true;
         }
     };
@@ -92,7 +116,6 @@
         return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
 </script>
-
 <h1> Typing Speed-Test </h1>
 <div
     class="text"
@@ -106,7 +129,7 @@
         }
     }}
 >
-    {#each textArray as char, index}
+    {#each textArray[currentRow] as char, index}
         <span
             class="char"
             class:char--current={index === currentIndex}
@@ -122,6 +145,20 @@
 <input type="text" onkeydown={calculate} disabled={testOver} bind:this={inputRef}/>
 {#if testOver}
     <h2> Test Over! </h2>
+    <p>
+        {#each textArray as row}
+            {#each row as char}
+                <span
+                    class="char"
+                    class:char--correct={char.correct === true}
+                    class:char--incorrect={char.correct === false}
+                >
+                    {char.char}
+                </span>
+            {/each}
+            <br/>
+        {/each}
+    </p>
 {/if}
 <div> {wpm} WPM </div>
 <div> {cpm} CPM </div>
@@ -156,5 +193,14 @@
         &--incorrect {
             color: red;
         }
+    }
+
+    .text {
+        border: 1px solid black;
+        user-select: none;
+        cursor: text;
+        padding: 5px;
+        text-wrap: pretty;
+        text-align: justify;
     }
 </style>
