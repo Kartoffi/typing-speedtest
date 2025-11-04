@@ -1,17 +1,31 @@
 <script lang="ts">
+    interface CharInfo {
+        char: string;
+        typed: boolean;
+        correct: boolean | null;
+    };
+
+    let inputRef: HTMLInputElement;
+
     let wpm = $state(0);
     let cpm = $state(0);
     let time = $state(60);
     let tippedChars = $state(0);
     let testOver = $state(false);
     let text = 'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.';
+    let textArray = $state(
+        text.split('').map((char): CharInfo => ({ char, typed: false, correct: null }))
+    );
     let tippedText = $state('');
+    let falseChars = $state(0);
+    let currentIndex = $state(0);
+    let whitelist = ['Shift'];
 
 
     const recalcSpeed = () => {
         let elapsedTime = 60 - time;
         if (elapsedTime > 0) {
-            cpm = tippedChars / (elapsedTime / 60);
+            cpm = Math.floor(tippedChars / (elapsedTime / 60));
             wpm = Math.floor(cpm / 5);
         } else {
             cpm = 0;
@@ -20,8 +34,10 @@
     };
 
     const countdown = () => {
+        if (testOver) return;
         if (time > 0) {
             setTimeout(() => {
+                if (testOver) return;
                 time -= 1;
                 recalcSpeed();
                 countdown();
@@ -35,9 +51,27 @@
 
     countdown();
 
-    const calculate = () => {
+    const calculate = (event: KeyboardEvent) => {
+
+        if (testOver || whitelist.includes(event.key)) {
+            return;
+        }
+
+        if ((text.split('')[currentIndex] !== event.key)) {
+            textArray[currentIndex].correct = false;
+            falseChars += 1;
+            currentIndex += 1;
+            return;
+        }
+
+        textArray[currentIndex].correct = true;
         tippedChars += 1;
+        currentIndex += 1;
         recalcSpeed();
+
+        if (currentIndex === text.length) {
+            testOver = true;
+        }
     };
 
     const secondsInMinutes = (seconds: number) => {
@@ -48,17 +82,65 @@
 </script>
 
 <h1> Typing Speed-Test </h1>
-<p>{text}</p>
+<div
+    class="text"
+    role="button"
+    tabindex="0"
+    onclick={() => inputRef && inputRef.focus()}
+    onkeydown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            inputRef && inputRef.focus();
+        }
+    }}
+>
+    {#each textArray as char, index}
+        <span
+            class="char"
+            class:char--current={index === currentIndex}
+            class:char--correct={index < currentIndex && char.correct === true}
+            class:char--incorrect={index < currentIndex && char.correct === false}
+            class:char--pending={index > currentIndex}
+        >
+            {char.char}
+        </span>
+    {/each}
+</div>
 <div> {secondsInMinutes(time)} seconds left</div>
-<input type="text" onkeydown="{calculate}" disabled="{testOver}" />
+<input type="text" onkeydown={calculate} disabled={testOver} bind:this={inputRef}/>
 {#if testOver}
     <h2> Test Over! </h2>
 {/if}
 <div> {wpm} WPM </div>
 <div> {cpm} CPM </div>
+<div> False chars: {falseChars}</div>
 
-<style>
+<style lang="scss">
     * {
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+    }
+
+    input {
+        opacity: 0;
+        position: absolute;
+        pointer-events: none;
+    }
+
+    .char {
+        &--current {
+            text-decoration: underline;
+        }
+
+        &--pending {
+            color: grey;
+        }
+
+        &--correct {
+            color: green;
+        }
+
+        &--incorrect {
+            color: red;
+        }
     }
 </style>
