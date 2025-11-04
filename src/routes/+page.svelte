@@ -15,14 +15,13 @@
 
     let wpm = $state(0);
     let cpm = $state(0);
-    let time = $state(60);
+    let time = $state(600);
 
     let correctTippedChars = $state(0);
     let falseTippedChars = $state(0);
 
     let testOver = $state(false);
     let text = 'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier. Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.';
-    let tippedText = $state('');
     let currentIndex = $state(0);
     let whitelist = ['Shift'];
     let currentRow = $state(0);
@@ -31,7 +30,6 @@
         let words = text.split(' ');
         let wordsArr = [];
         let remainingCharsInRow = maxCharLengthInRow;
-        let currentRowIndex = 0;
         let rows: Char[][] = [[]];
 
         wordsArr = words.map((word): Word => {
@@ -60,7 +58,7 @@
         return rows;
     }
 
-    let textArray = $state(createTextArray(text, 70));
+    let textArray = $state(createTextArray(text, 22));
 
 
     const recalcSpeed = () => {
@@ -158,17 +156,44 @@
         }}
     >
         {#if textArray.length > 0 && textArray[currentRow]}
-        {#each textArray[currentRow] as char, index}
-            <span
-                class="char"
-                class:char--current={index === currentIndex}
-                class:char--correct={index < currentIndex && char.correct === true}
-                class:char--incorrect={index < currentIndex && char.correct === false}
-                class:char--pending={index > currentIndex}
-            >
-                {char.char}
-            </span>
-        {/each}
+            {#if textArray[currentRow - 1]}
+                <div class="row">
+                    {#each textArray[currentRow - 1] as char}
+                        <span
+                            class="char"
+                            class:char--correct={char.correct === true}
+                            class:char--incorrect={char.correct === false}
+                        >
+                            {char.char}
+                        </span>
+                    {/each}
+                </div>
+            {/if}
+            <div class="row">
+                {#each textArray[currentRow] as char, index}
+                    <span
+                        class="char"
+                        class:char--current={index === currentIndex}
+                        class:char--correct={index < currentIndex && char.correct === true}
+                        class:char--incorrect={index < currentIndex && char.correct === false}
+                        class:char--pending={index > currentIndex}
+                    >
+                        {char.char}
+                    </span>
+                {/each}
+            </div>
+            {#if textArray[currentRow + 1]}
+                <div class="row">
+                    {#each textArray[currentRow + 1] as char}
+                        <span
+                            class="char"
+                            class:char--pending={true}
+                        >
+                            {char.char}
+                        </span>
+                    {/each}
+                </div>
+            {/if}
         {/if}
     </div>
 {/if}
@@ -198,10 +223,6 @@
 <div> Total chars: {correctTippedChars + falseTippedChars}</div>
 
 <style lang="scss">
-    * {
-        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
-    }
-
     input {
         opacity: 0;
         position: absolute;
@@ -209,29 +230,45 @@
     }
 
     .char {
+        display: inline-block;
+        font-weight: bold;
+        width: 16px;
+        height: 28px;
+        text-align: center;
+        border-bottom: 2px solid transparent;
         &--current {
-            text-decoration: underline;
+            border-bottom: 2px solid rgb(172, 49, 255);
+            color: rgb(172, 49, 255);
         }
 
         &--pending {
-            color: grey;
-        }
-
-        &--correct {
-            color: green;
+            color: rgb(151, 151, 151);
         }
 
         &--incorrect {
-            color: red;
+            color: rgb(255, 49, 100);
         }
     }
 
+    .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid lightgrey;
+    }
+
     .text {
-        border: 1px solid black;
+        border: 1px solid rgba(194, 194, 194, 0.308);
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
         user-select: none;
         cursor: text;
-        padding: 5px;
+        padding: 30px;
         text-wrap: pretty;
         text-align: justify;
+        font-size: 1.2rem;
+        width: calc(100% - 80px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
 </style>
