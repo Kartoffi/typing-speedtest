@@ -131,6 +131,10 @@
         if (globalIndex + 1 >= text.length) {
             testOver = true;
         }
+
+        if (currentRow >= textArray.length) {
+            testOver = true;
+        }
     };
 
     const secondsInMinutes = (seconds: number) => {
@@ -140,32 +144,34 @@
     }
 </script>
 <h1> Typing Speed-Test </h1>
-<div
-    class="text"
-    role="button"
-    tabindex="0"
-    onclick={() => inputRef && inputRef.focus()}
-    onkeydown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            inputRef && inputRef.focus();
-        }
-    }}
->
-    {#if textArray.length > 0 && textArray[currentRow]}
-      {#each textArray[currentRow] as char, index}
-          <span
-              class="char"
-              class:char--current={index === currentIndex}
-              class:char--correct={index < currentIndex && char.correct === true}
-              class:char--incorrect={index < currentIndex && char.correct === false}
-              class:char--pending={index > currentIndex}
-          >
-              {char.char}
-          </span>
-      {/each}
-    {/if}
-</div>
+{#if !testOver}
+    <div
+        class="text"
+        role="button"
+        tabindex="0"
+        onclick={() => inputRef && inputRef.focus()}
+        onkeydown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                inputRef && inputRef.focus();
+            }
+        }}
+    >
+        {#if textArray.length > 0 && textArray[currentRow]}
+        {#each textArray[currentRow] as char, index}
+            <span
+                class="char"
+                class:char--current={index === currentIndex}
+                class:char--correct={index < currentIndex && char.correct === true}
+                class:char--incorrect={index < currentIndex && char.correct === false}
+                class:char--pending={index > currentIndex}
+            >
+                {char.char}
+            </span>
+        {/each}
+        {/if}
+    </div>
+{/if}
 <div> {secondsInMinutes(time)} seconds left</div>
 <input type="text" onkeydown={calculate} disabled={testOver} bind:this={inputRef}/>
 {#if testOver}
