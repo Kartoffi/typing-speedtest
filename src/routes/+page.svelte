@@ -6,18 +6,21 @@
     };
 
     let inputRef: HTMLInputElement;
+    let accuracy = $state(100);
 
     let wpm = $state(0);
     let cpm = $state(0);
     let time = $state(60);
-    let tippedChars = $state(0);
+
+    let correctTippedChars = $state(0);
+    let falseTippedChars = $state(0);
+
     let testOver = $state(false);
-    let text = 'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.';
+    let text = 'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier. Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.';
     let textArray = $state(
         text.split('').map((char): CharInfo => ({ char, typed: false, correct: null }))
     );
     let tippedText = $state('');
-    let falseChars = $state(0);
     let currentIndex = $state(0);
     let whitelist = ['Shift'];
 
@@ -25,7 +28,7 @@
     const recalcSpeed = () => {
         let elapsedTime = 60 - time;
         if (elapsedTime > 0) {
-            cpm = Math.floor(tippedChars / (elapsedTime / 60));
+            cpm = Math.floor(correctTippedChars / (elapsedTime / 60));
             wpm = Math.floor(cpm / 5);
         } else {
             cpm = 0;
@@ -52,24 +55,33 @@
     countdown();
 
     const calculate = (event: KeyboardEvent) => {
-
         if (testOver || whitelist.includes(event.key)) {
+            return;
+        }
+
+        if (currentIndex > text.length) {
+            testOver = true;
             return;
         }
 
         if ((text.split('')[currentIndex] !== event.key)) {
             textArray[currentIndex].correct = false;
-            falseChars += 1;
+            falseTippedChars += 1;
             currentIndex += 1;
+            accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
+            if (currentIndex >= text.length) {
+                testOver = true;
+            }
             return;
         }
 
         textArray[currentIndex].correct = true;
-        tippedChars += 1;
+        correctTippedChars += 1;
         currentIndex += 1;
+        accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
         recalcSpeed();
 
-        if (currentIndex === text.length) {
+        if (currentIndex >= text.length) {
             testOver = true;
         }
     };
@@ -113,7 +125,9 @@
 {/if}
 <div> {wpm} WPM </div>
 <div> {cpm} CPM </div>
-<div> False chars: {falseChars}</div>
+<div> Accuracy: {accuracy}</div>
+<div> False chars: {falseTippedChars}</div>
+<div> Total chars: {correctTippedChars + falseTippedChars}</div>
 
 <style lang="scss">
     * {
