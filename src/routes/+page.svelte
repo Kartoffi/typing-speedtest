@@ -1,8 +1,13 @@
 <script lang="ts">
-    interface CharInfo {
+    interface Char {
         char: string;
         typed: boolean;
         correct: boolean | null;
+    };
+
+    interface Word {
+        word: string;
+        chars: Char[];
     };
 
     let inputRef: HTMLInputElement;
@@ -23,21 +28,39 @@
     let currentRow = $state(0);
     
     const createTextArray = (text: string, maxCharLengthInRow: number) => {
-        let chars = text.split('').map((char): CharInfo => ({ char, typed: false, correct: null }));
-        let rows: CharInfo[][] = [];
-        let row: CharInfo[] = [];
-        chars.forEach((element, index) => {
-            row.push(element);
-            if ((index % maxCharLengthInRow === 0) && index !== 0) {
-                rows.push(row);
-                row = [];
-            }
+        let words = text.split(' ');
+        let wordsArr = [];
+        let remainingCharsInRow = maxCharLengthInRow;
+        let currentRowIndex = 0;
+        let rows: Char[][] = [[]];
+
+        wordsArr = words.map((word): Word => {
+            return {
+                word,
+                chars: word.split('').map((char): Char => ({ char, typed: false, correct: null }))
+            };
         });
-        
+
+        wordsArr.forEach((wordObj, i) => {
+            // +1 for space between words, except at the start of a row
+            let wordLengthWithSpace = wordObj.word.length + (rows[rows.length - 1].length > 0 ? 1 : 0);
+            if (wordLengthWithSpace > remainingCharsInRow) {
+                rows.push([]);
+                remainingCharsInRow = maxCharLengthInRow;
+            }
+            // Add space if not first word in row
+            if (rows[rows.length - 1].length > 0) {
+                rows[rows.length - 1].push({ char: ' ', typed: false, correct: null });
+                remainingCharsInRow -= 1;
+            }
+            rows[rows.length - 1].push(...wordObj.chars);
+            remainingCharsInRow -= wordObj.word.length;
+        });
+
         return rows;
     }
 
-    let textArray = $state(createTextArray(text, 50));
+    let textArray = $state(createTextArray(text, 70));
 
 
     const recalcSpeed = () => {
@@ -129,17 +152,19 @@
         }
     }}
 >
-    {#each textArray[currentRow] as char, index}
-        <span
-            class="char"
-            class:char--current={index === currentIndex}
-            class:char--correct={index < currentIndex && char.correct === true}
-            class:char--incorrect={index < currentIndex && char.correct === false}
-            class:char--pending={index > currentIndex}
-        >
-            {char.char}
-        </span>
-    {/each}
+    {#if textArray.length > 0 && textArray[currentRow]}
+      {#each textArray[currentRow] as char, index}
+          <span
+              class="char"
+              class:char--current={index === currentIndex}
+              class:char--correct={index < currentIndex && char.correct === true}
+              class:char--incorrect={index < currentIndex && char.correct === false}
+              class:char--pending={index > currentIndex}
+          >
+              {char.char}
+          </span>
+      {/each}
+    {/if}
 </div>
 <div> {secondsInMinutes(time)} seconds left</div>
 <input type="text" onkeydown={calculate} disabled={testOver} bind:this={inputRef}/>
