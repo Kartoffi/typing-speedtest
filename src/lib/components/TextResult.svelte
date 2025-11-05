@@ -9,6 +9,7 @@
                 <span
                     class="overview-char"
                     class:overview-char--incorrect={char.correct === false}
+                    class:overview-char--pending={char.correct === null}
                 >
                     {char.char}
                 </span>
@@ -43,6 +44,10 @@
 
         &--incorrect {
             color: rgb(255, 49, 100);
+        }
+
+        &--pending {
+            color: rgb(151, 151, 151);
         }
     }
 }
