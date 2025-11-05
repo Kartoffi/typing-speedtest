@@ -82,7 +82,7 @@
     }
 
     &-fg {
-        stroke: rgb(172, 49, 255);
+        stroke: var(--primary-color);
         stroke-dasharray: var(--circumference);
         stroke-dashoffset: calc(var(--circumference) - var(--dash));
         transition: stroke-dashoffset 0.5s ease;

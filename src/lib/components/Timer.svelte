@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), recalcSpeed, gameStarted = $bindable() } = $props();
+    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), recalcSpeed, gameStarted = $bindable(), gameIsPaused = $bindable() } = $props();
 
     const convertSecondsInMinutes = (seconds: number) => {
         let minutes = Math.floor(seconds / 60);
@@ -13,6 +13,16 @@
         if (timerId) {
             clearTimeout(timerId);
             timerId = null;
+        }
+    }
+
+    function pauseCountdown() {
+        stopCountdown();
+    }
+
+    function resumeCountdown() {
+        if (!timerId) {
+            countdown();
         }
     }
 
@@ -38,7 +48,18 @@
     $effect(() => {
         if (gameStarted && !testIsOver && timeRemaining > 0) {
             countdown();
-        } else {
+        }
+        
+        if (gameIsPaused && !testIsOver && gameStarted && timeRemaining > 0) {
+            pauseCountdown();
+
+        }
+        
+        if (!gameIsPaused && !testIsOver && gameStarted && timeRemaining > 0) {
+            resumeCountdown();
+        }
+        
+        else {
             stopCountdown();
         }
     });
@@ -80,7 +101,7 @@
 
             &-fill {
                 height: 100%;
-                background-color: rgb(172, 49, 255);
+                background-color: var(--primary-color);
                 border-radius: 5px;
             }
         }

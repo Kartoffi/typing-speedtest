@@ -22,7 +22,7 @@
     let wpm = $state(0);
     let cpm = $state(0);
 
-    let timeTotal = 120;
+    let timeTotal = 1200;
 
     let timeRemaining = $state(timeTotal);
 
@@ -30,6 +30,7 @@
     let falseTippedChars = $state(0);
 
     let testIsOver = $state(false);
+    let gameIsPaused = $state(false);
 
     let texts = [
         'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.',
@@ -161,10 +162,10 @@
     };
 </script>
 <h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
-<Timer {timeTotal} bind:timeRemaining bind:testIsOver {recalcSpeed} bind:gameStarted/>
+<Timer {timeTotal} bind:timeRemaining bind:testIsOver {recalcSpeed} bind:gameStarted bind:gameIsPaused/>
 
 {#if !testIsOver}
-    <TypeArea bind:textArray bind:currentRow bind:currentIndex {calculate} bind:gameStarted/>
+    <TypeArea bind:textArray bind:currentRow bind:currentIndex {calculate} bind:gameStarted bind:gameIsPaused bind:testIsOver/>
 {/if}
 
 {#if !gameStarted && !testIsOver}
@@ -188,14 +189,14 @@
         font-size: 1rem;
         font-weight: bold;
         cursor: pointer;
-        background-color: #ac31ff;
+        background-color: var(--primary-color);
         color: white;
         border: none;
         border-radius: 5px;
         transition: transform 0.3s ease;
 
         &:hover {
-            background-color: #922ee6;
+            background-color: var(--primary-color-dark);
             transform: translateY(-2px);
         }
     }

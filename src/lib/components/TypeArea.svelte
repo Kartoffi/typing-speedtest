@@ -1,5 +1,14 @@
 <script lang="ts">
-    let { textArray = $bindable(), currentRow = $bindable(), currentIndex = $bindable(), calculate, gameStarted = $bindable() } = $props();
+    let { 
+        textArray = $bindable(),
+        currentRow = $bindable(),
+        currentIndex = $bindable(),
+        gameStarted = $bindable(),
+        gameIsPaused = $bindable(),
+        testIsOver = $bindable(),
+        calculate
+    } = $props();
+
     let inputRef: HTMLInputElement | null = null;
 </script>
 
@@ -61,7 +70,18 @@
     {/if}
 </div>
 
-<input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted}/>
+<input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted || gameIsPaused}/>
+
+{#if gameStarted}
+    <div class="buttons">
+        <button class="button button-pause" onclick="{() => gameIsPaused = !gameIsPaused}">
+            <img class="icon" src="{gameIsPaused ? '/src/lib/assets/icons/continue.svg' : '/src/lib/assets/icons/pause.svg'}" alt="Pause" />
+        </button>
+        <button class="button button-stop" onclick="{() => testIsOver = true}">
+            <img class="icon" src="/src/lib/assets/icons/stop.svg" alt="Stop" />
+        </button>
+    </div>
+{/if}
 
 <style lang="scss">
 .char {
@@ -72,8 +92,8 @@
     text-align: center;
     border-bottom: 2px solid transparent;
     &--current {
-        border-bottom: 2px solid rgb(172, 49, 255);
-        color: rgb(172, 49, 255);
+        border-bottom: 2px solid var(--primary-color);
+        color: var(--primary-color);
     }
 
     &--pending {
@@ -119,5 +139,35 @@ input {
     opacity: 0;
     position: absolute;
     pointer-events: none;
+}
+
+.buttons {
+    display: flex;
+    gap: 30px;
+    margin-top: 10px;
+}
+.button {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    &:hover .icon {
+        opacity: 0.7;
+    }
+}
+
+.icon {
+    width: 35px;
+    height: 35px;
+    filter: brightness(0) saturate(100%) invert(47%) sepia(87%) saturate(6924%) hue-rotate(266deg) brightness(100%) contrast(102%);
+    transition: opacity 0.2s;
 }
 </style>
