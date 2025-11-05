@@ -26,6 +26,11 @@
             }
             timeRemaining -= 1;
             recalcSpeed();
+            if (timeRemaining <= 0) {
+                testIsOver = true;
+                stopCountdown();
+                return;
+            }
             countdown();
         }, 1000);
     }
