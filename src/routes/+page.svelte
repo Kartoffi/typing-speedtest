@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Timer from '$lib/components/Timer.svelte';
+
     interface Char {
         char: string;
         typed: boolean;
@@ -15,14 +17,22 @@
 
     let wpm = $state(0);
     let cpm = $state(0);
-    let totalTime = 600;
-    let time = $state(600);
+
+    let timeTotal = 120;
+
+    let timeRemaining = $state(timeTotal);
 
     let correctTippedChars = $state(0);
     let falseTippedChars = $state(0);
 
-    let testOver = $state(false);
-    let text = 'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier. Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.';
+    let testIsOver = $state(false);
+
+    let texts = [
+        'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.',
+        'Svelte ist ein modernes Frontend-Framework, das sich durch seine Einfachheit und Effizienz auszeichnet. Es ermöglicht Entwicklern, reaktive Benutzeroberflächen mit minimalem Aufwand zu erstellen.',
+        'TypeScript ist eine von Microsoft entwickelte Programmiersprache, die auf JavaScript basiert und statische Typisierung sowie moderne Sprachfeatures bietet. Sie verbessert die Codequalität und Wartbarkeit in großen Projekten.'
+    ];
+    let text = texts[Math.floor(Math.random() * texts.length)];
     let currentIndex = $state(0);
     let whitelist = ['Shift'];
     let currentRow = $state(0);
@@ -60,11 +70,9 @@
     }
 
     let textArray = $state(createTextArray(text, 22));
-    let textArrayFlat = $state(textArray.flat());
-
 
     const recalcSpeed = () => {
-        let elapsedTime = totalTime - time;
+        let elapsedTime = timeTotal - timeRemaining;
         if (elapsedTime > 0) {
             cpm = Math.floor(correctTippedChars / (elapsedTime / 60));
             wpm = Math.floor(cpm / 5);
@@ -74,26 +82,8 @@
         }
     };
 
-    const countdown = () => {
-        if (testOver) return;
-        if (time > 0) {
-            setTimeout(() => {
-                if (testOver) return;
-                time -= 1;
-                recalcSpeed();
-                countdown();
-            }, 1000);
-        }
-
-        if (time === 0) {
-            testOver = true;
-        }
-    };
-
-    countdown();
-
     const calculate = (event: KeyboardEvent) => {
-        if (testOver || whitelist.includes(event.key)) {
+        if (testIsOver || whitelist.includes(event.key)) {
             return;
         }
 
@@ -103,7 +93,7 @@
         // Calculate global char index
         let globalIndex = currentRow * rowLength + currentIndex;
         if (globalIndex >= text.length) {
-            testOver = true;
+            testIsOver = true;
             return;
         }
 
@@ -112,8 +102,9 @@
             falseTippedChars += 1;
             currentIndex += 1;
             accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
+
             if (globalIndex + 1 >= text.length) {
-                testOver = true;
+                testIsOver = true;
             }
 
             // If last letter of row, move to next row
@@ -135,22 +126,17 @@
             currentIndex = 0;
         }
         if (globalIndex + 1 >= text.length) {
-            testOver = true;
+            testIsOver = true;
         }
 
         if (currentRow >= textArray.length) {
-            testOver = true;
+            testIsOver = true;
         }
     };
-
-    const secondsInMinutes = (seconds: number) => {
-        let minutes = Math.floor(seconds / 60);
-        let remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-    }
 </script>
-<h1> {testOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
-{#if !testOver}
+<h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
+<Timer {timeTotal} bind:timeRemaining={timeRemaining} bind:testIsOver={testIsOver} {recalcSpeed}/>
+{#if !testIsOver}
     <div
         class="text"
         role="button"
@@ -209,65 +195,58 @@
         {/if}
     </div>
 {/if}
-<div class="countdown">
-    <div class="countdown-timer">
-        {secondsInMinutes(time)}
-    </div>
-    <div class="countdown-progression-bar">
-        <div
-            class="countdown-progression-bar-fill"
-            style="width: {(time / totalTime) * 100}%"
-        ></div>
-    </div>
-</div>
-<input type="text" onkeydown={calculate} disabled={testOver} bind:this={inputRef}/>
-<div class="accuracy-container">
-    <div class="accuracy-area">
-        <div class="accuracy-percent">
-            {accuracy}
-        </div>
-        <svg class="accuracy" style="--progress: {accuracy}" viewBox="0 0 80 80" width="80" height="80">
-            <circle class="accuracy-bg"></circle>
-            <circle class="accuracy-fg"></circle>
-        </svg>
-    </div>
-    <div> Accuracy</div>
-</div>
+<input type="text" onkeydown={calculate} disabled={testIsOver} bind:this={inputRef}/>
 <div class="stats">
-    <div class="stats-container">
-        <div class="stats-value">
-            {wpm}
+    <div class="column">
+        <div class="stats-container">
+            <div class="stats-value">
+                {wpm}
+            </div>
+            <div class="stats-text">
+                WPM
+            </div>
         </div>
-        <div class="stats-text">
-            WPM
-        </div>
-    </div>
-    <div class="stats-container">
-        <div class="stats-value">
-            {cpm}
-        </div>
-        <div class="stats-text">
-            CPM
-        </div>
-    </div>
-    <div class="stats-container">
-        <div class="stats-value">
-            {falseTippedChars}
-        </div>
-        <div class="stats-text">
-            False Chars
+        <div class="stats-container">
+            <div class="stats-value">
+                {cpm}
+            </div>
+            <div class="stats-text">
+                CPM
+            </div>
         </div>
     </div>
-    <div class="stats-container">
-        <div class="stats-value">
-            {correctTippedChars + falseTippedChars}
+    <div class="accuracy-container">
+        <div class="accuracy-area">
+            <div class="accuracy-percent">
+                {accuracy}
+            </div>
+            <svg class="accuracy" style="--progress: {accuracy}" viewBox="0 0 80 80" width="80" height="80">
+                <circle class="accuracy-bg"></circle>
+                <circle class="accuracy-fg"></circle>
+            </svg>
         </div>
-        <div class="stats-text">
-            Total Chars
+        <div> Accuracy</div>
+    </div>
+    <div class="column">
+        <div class="stats-container">
+            <div class="stats-value">
+                {falseTippedChars}
+            </div>
+            <div class="stats-text">
+                False Chars
+            </div>
+        </div>
+        <div class="stats-container">
+            <div class="stats-value">
+                {correctTippedChars + falseTippedChars}
+            </div>
+            <div class="stats-text">
+                Total Chars
+            </div>
         </div>
     </div>
 </div>
-{#if testOver}
+{#if testIsOver}
     <div class="overview">
         {#each textArray as row}
             <div class="overview-row">
@@ -320,9 +299,9 @@
     .row {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         border-bottom: 1px solid lightgrey;
         height: 30px;
+        gap: 5px;
     }
 
     .text {
@@ -355,8 +334,9 @@
             border-bottom: 1px solid lightgrey;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             height: 30px;
+            gap: 5px;
         }
 
         &-char {
@@ -365,36 +345,6 @@
 
             &--incorrect {
                 color: rgb(255, 49, 100);
-            }
-        }
-    }
-
-    .countdown {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-        margin: 20px 0;
-
-        &-timer {
-            font-size: 2rem;
-            font-weight: bold;
-            letter-spacing: 6px;
-        }
-
-        &-progression-bar {
-            width: 80%;
-            height: 10px;
-            background-color: lightgray;
-            border-radius: 5px;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,.075);
-
-            &-fill {
-                height: 100%;
-                background-color: rgb(172, 49, 255);
-                border-radius: 5px;
-                transition: width 1s linear;
             }
         }
     }
@@ -412,7 +362,6 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
-            margin-top: 30px;
         }
 
         & circle {
@@ -421,7 +370,6 @@
             r: var(--radius);
             fill: transparent;
             stroke-width: var(--stroke-width);
-            stroke-linecap: round;
         }
 
         &-bg {
@@ -454,10 +402,11 @@
     }
 
     .stats {
-        margin-top: 20px;
+        margin-top: 50px;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
+        width: 90%;
 
         &-container {
             width: 80px;
@@ -465,6 +414,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 5px;
         }
 
@@ -473,5 +423,11 @@
             font-weight: bold;
             text-align: center;
         }
+    }
+
+    .column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
 </style>
