@@ -110,9 +110,15 @@
         // Get row length for easier reference
         let rowLength = textArray[currentRow]?.length || 1;
 
-        // Calculate global char index
-        let globalIndex = currentRow * rowLength + currentIndex;
-        if (globalIndex >= text.length) {
+        // Count total chars in textArray
+        const totalChars = textArray.reduce((sum, row) => sum + row.length, 0);
+        // Calculate current char position
+        let charPos = 0;
+        for (let r = 0; r < currentRow; r++) {
+            charPos += textArray[r].length;
+        }
+        charPos += currentIndex;
+        if (charPos >= totalChars) {
             testIsOver = true;
             return;
         }
@@ -123,7 +129,7 @@
             currentIndex += 1;
             accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
 
-            if (globalIndex + 1 >= text.length) {
+            if (charPos + 1 >= totalChars) {
                 testIsOver = true;
             }
 
@@ -145,7 +151,7 @@
             currentRow += 1;
             currentIndex = 0;
         }
-        if (globalIndex + 1 >= text.length) {
+        if (charPos + 1 >= totalChars) {
             testIsOver = true;
         }
 
