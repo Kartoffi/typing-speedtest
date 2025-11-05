@@ -1,8 +1,6 @@
 <script lang="ts">
     let { textArray = $bindable(), currentRow = $bindable(), currentIndex = $bindable(), calculate } = $props();
     let inputRef: HTMLInputElement | null = null;
-
-    console.log(textArray[currentRow]);
 </script>
 
 <div
