@@ -107,6 +107,12 @@
     flex-direction: column;
     gap: 16px;
     margin: 30px;
+    border: 2px solid transparent;
+    outline: none;
+
+    &:focus {
+        border: 2px solid rgba(173, 49, 255, 0.336);
+    }
 }
 
 input {
