@@ -82,7 +82,6 @@
                 height: 100%;
                 background-color: rgb(172, 49, 255);
                 border-radius: 5px;
-                transition: width 1s linear;
             }
         }
     }
