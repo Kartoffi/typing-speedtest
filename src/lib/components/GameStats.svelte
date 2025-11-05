@@ -107,7 +107,7 @@
 }
 
 .stats {
-    margin-top: 50px;
+    margin-top: 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;

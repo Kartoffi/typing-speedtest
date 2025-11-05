@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), recalcSpeed } = $props();
+    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), recalcSpeed, gameStarted = $bindable() } = $props();
 
     const convertSecondsInMinutes = (seconds: number) => {
         let minutes = Math.floor(seconds / 60);
@@ -7,23 +7,36 @@
         return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
     }
 
-    const countdown = () => {
-        if (testIsOver) return;
-        if (timeRemaining > 0) {
-            setTimeout(() => {
-                if (testIsOver) return;
-                timeRemaining -= 1;
-                recalcSpeed();
-                countdown();
-            }, 1000);
-        }
+    let timerId: ReturnType<typeof setTimeout> | null = null;
 
-        if (timeRemaining === 0) {
-            testIsOver = true;
+    function stopCountdown() {
+        if (timerId) {
+            clearTimeout(timerId);
+            timerId = null;
         }
-    };
+    }
 
-    countdown();
+    function countdown() {
+        stopCountdown();
+        if (!gameStarted || testIsOver || timeRemaining <= 0) return;
+        timerId = setTimeout(() => {
+            if (!gameStarted || testIsOver || timeRemaining <= 0) {
+                stopCountdown();
+                return;
+            }
+            timeRemaining -= 1;
+            recalcSpeed();
+            countdown();
+        }, 1000);
+    }
+
+    $effect(() => {
+        if (gameStarted && !testIsOver && timeRemaining > 0) {
+            countdown();
+        } else {
+            stopCountdown();
+        }
+    });
 </script>
 
 <div class="countdown">

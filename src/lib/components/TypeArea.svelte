@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { textArray = $bindable(), currentRow = $bindable(), currentIndex = $bindable(), calculate } = $props();
+    let { textArray = $bindable(), currentRow = $bindable(), currentIndex = $bindable(), calculate, gameStarted = $bindable() } = $props();
     let inputRef: HTMLInputElement | null = null;
 </script>
 
@@ -61,7 +61,7 @@
     {/if}
 </div>
 
-<input type="text" onkeydown={calculate} bind:this={inputRef}/>
+<input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted}/>
 
 <style lang="scss">
 .char {
