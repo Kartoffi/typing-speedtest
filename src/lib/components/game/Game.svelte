@@ -1,8 +1,10 @@
 <script lang="ts">
-    import Timer from '$lib/components/Timer.svelte';
-    import TypeArea from '$lib/components/TypeArea.svelte';
-    import GameStats from '$lib/components/GameStats.svelte';
-	import TextResult from '$lib/components/TextResult.svelte';
+    import Timer from '$lib/components/game/Timer.svelte';
+    import TypeArea from '$lib/components/game/TypeArea.svelte';
+    import GameStats from '$lib/components/game/GameStats.svelte';
+	import TextResult from '$lib/components/game/TextResult.svelte';
+
+    let { text, timeTotal } = $props();
 
     interface Char {
         char: string;
@@ -17,12 +19,10 @@
 
     let gameStarted = $state(false);
 
-    let accuracy = $state(100);
+    let accuracy = $state(0);
 
     let wpm = $state(0);
     let cpm = $state(0);
-
-    let timeTotal = 1200;
 
     let timeRemaining = $state(timeTotal);
 
@@ -32,12 +32,6 @@
     let testIsOver = $state(false);
     let gameIsPaused = $state(false);
 
-    let texts = [
-        'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.',
-        'Svelte ist ein modernes Frontend-Framework, das sich durch seine Einfachheit und Effizienz auszeichnet. Es ermöglicht Entwicklern, reaktive Benutzeroberflächen mit minimalem Aufwand zu erstellen.',
-        'TypeScript ist eine von Microsoft entwickelte Programmiersprache, die auf JavaScript basiert und statische Typisierung sowie moderne Sprachfeatures bietet. Sie verbessert die Codequalität und Wartbarkeit in großen Projekten.'
-    ];
-    let text = texts[Math.floor(Math.random() * texts.length)];
     let currentIndex = $state(0);
     let whitelist = ['Shift'];
     let currentRow = $state(0);
@@ -50,12 +44,13 @@
         currentRow = 0;
         correctTippedChars = 0;
         falseTippedChars = 0;
-        accuracy = 100;
+        accuracy = 0;
         wpm = 0;
         cpm = 0;
         timeRemaining = timeTotal;
         testIsOver = false;
         gameStarted = false;
+        gameIsPaused = false;
     };
     
     const createTextArray = (text: string, maxCharLengthInRow: number) => {
@@ -162,7 +157,6 @@
     };
 </script>
 <h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
-<Timer {timeTotal} bind:timeRemaining bind:testIsOver {recalcSpeed} bind:gameStarted bind:gameIsPaused/>
 
 {#if !testIsOver}
     <TypeArea bind:textArray bind:currentRow bind:currentIndex {calculate} bind:gameStarted bind:gameIsPaused bind:testIsOver/>
@@ -171,33 +165,12 @@
 {#if !gameStarted && !testIsOver}
     <button onclick="{() => gameStarted = true}" class="primary-button" disabled="{gameStarted}"> Start Game</button>
 {/if}
-
 {#if gameStarted}
+    <Timer {timeTotal} bind:timeRemaining bind:testIsOver {recalcSpeed} bind:gameStarted bind:gameIsPaused/>
     <GameStats bind:wpm bind:cpm bind:accuracy bind:falseTippedChars bind:correctTippedChars/>
 {/if}
 
 {#if testIsOver}
-    <button class="primary-button" onclick="{startNewGame}"> New Game </button>
-
     <TextResult {textArray} />
+    <button class="primary-button" onclick="{startNewGame}"> New Game </button>
 {/if}
-
-<style lang="scss">
-    .primary-button {
-        margin: 0 auto;
-        padding: 16px 20px;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        transition: transform 0.3s ease;
-
-        &:hover {
-            background-color: var(--primary-color-dark);
-            transform: translateY(-2px);
-        }
-    }
-</style>

@@ -1,4 +1,15 @@
 <script lang="ts">
+    import Game from '$lib/components/game/Game.svelte';
+    import Options from '$lib/components/options/Options.svelte';
+
+    let optionsMode: boolean = true;
+    let text: string = '';
+    let gameMode: 'time' | 'tilTextFinished' = 'time';
+    let timeTotal: number = 60;
 </script>
-<h1> Typing Speed-Test </h1>
-<p>Choose your options:</p>
+
+{#if optionsMode}
+    <Options bind:text bind:timeTotal bind:optionsMode />
+{:else}
+    <Game {text} {timeTotal}/>
+{/if}

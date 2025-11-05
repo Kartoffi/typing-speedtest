@@ -24,6 +24,11 @@
         }
     }}
 >
+    {#if gameIsPaused}
+        <div class="paused">
+            Game is paused
+        </div>
+    {/if}
     {#if textArray.length > 0 && textArray[currentRow]}
         {#if textArray[currentRow - 1]}
             <div class="row">
@@ -72,17 +77,6 @@
 
 <input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted || gameIsPaused}/>
 
-{#if gameStarted}
-    <div class="buttons">
-        <button class="button button-pause" onclick="{() => gameIsPaused = !gameIsPaused}">
-            <img class="icon" src="{gameIsPaused ? '/src/lib/assets/icons/continue.svg' : '/src/lib/assets/icons/pause.svg'}" alt="Pause" />
-        </button>
-        <button class="button button-stop" onclick="{() => testIsOver = true}">
-            <img class="icon" src="/src/lib/assets/icons/stop.svg" alt="Stop" />
-        </button>
-    </div>
-{/if}
-
 <style lang="scss">
 .char {
     display: inline-block;
@@ -114,6 +108,7 @@
 }
 
 .text {
+    position: relative;
     border: 1px solid rgba(194, 194, 194, 0.308);
     box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
     user-select: none;
@@ -141,33 +136,17 @@ input {
     pointer-events: none;
 }
 
-.buttons {
+.paused {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.788);
     display: flex;
-    gap: 30px;
-    margin-top: 10px;
-}
-.button {
-    width: 32px;
-    height: 32px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    flex-grow: 0;
-
-    &:hover .icon {
-        opacity: 0.7;
-    }
-}
-
-.icon {
-    width: 35px;
-    height: 35px;
-    filter: brightness(0) saturate(100%) invert(47%) sepia(87%) saturate(6924%) hue-rotate(266deg) brightness(100%) contrast(102%);
-    transition: opacity 0.2s;
+    font-size: 2rem;
+    color: rgba(0, 0, 0, 0.733);
 }
 </style>

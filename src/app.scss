@@ -14,4 +14,40 @@ h1 {
 :root {
     --primary-color: #ac31ff;
     --primary-color-dark: #922ee6;
+    --warning-color: #ff4d4d;
+}
+
+.primary-button {
+    margin: 0 auto;
+    padding: 16px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    transition: transform 0.3s ease;
+
+    &:hover {
+        background-color: var(--primary-color-dark);
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        background-color: grey;
+        cursor: not-allowed;
+        transform: none;
+    }
+}
+
+.error-text {
+    color: var(--warning-color);
+    font-weight: bold;
+    margin: 20px 0;
+    opacity: 0;
+
+    &--visible {
+        opacity: 1;
+    }
 }
