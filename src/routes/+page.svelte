@@ -1,5 +1,6 @@
 <script lang="ts">
     import Timer from '$lib/components/Timer.svelte';
+    import TypeArea from '$lib/components/TypeArea.svelte';
 
     interface Char {
         char: string;
@@ -133,69 +134,13 @@
             testIsOver = true;
         }
     };
+    console.log(textArray);
 </script>
 <h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
-<Timer {timeTotal} bind:timeRemaining={timeRemaining} bind:testIsOver={testIsOver} {recalcSpeed}/>
+<Timer {timeTotal} bind:timeRemaining bind:testIsOver {recalcSpeed}/>
 {#if !testIsOver}
-    <div
-        class="text"
-        role="button"
-        tabindex="0"
-        onclick={() => inputRef && inputRef.focus()}
-        onkeydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                inputRef && inputRef.focus();
-            }
-        }}
-    >
-        {#if textArray.length > 0 && textArray[currentRow]}
-            {#if textArray[currentRow - 1]}
-                <div class="row">
-                    {#each textArray[currentRow - 1] as char}
-                        <span
-                            class="char"
-                            class:char--correct={char.correct === true}
-                            class:char--incorrect={char.correct === false}
-                        >
-                            {char.char}
-                        </span>
-                    {/each}
-                </div>
-            {:else}
-                <div class="row"></div>
-            {/if}
-            <div class="row">
-                {#each textArray[currentRow] as char, index}
-                    <span
-                        class="char"
-                        class:char--current={index === currentIndex}
-                        class:char--correct={index < currentIndex && char.correct === true}
-                        class:char--incorrect={index < currentIndex && char.correct === false}
-                        class:char--pending={index > currentIndex}
-                    >
-                        {char.char}
-                    </span>
-                {/each}
-            </div>
-            {#if textArray[currentRow + 1]}
-                <div class="row">
-                    {#each textArray[currentRow + 1] as char}
-                        <span
-                            class="char"
-                            class:char--pending={true}
-                        >
-                            {char.char}
-                        </span>
-                    {/each}
-                </div>
-            {:else}
-                <div class="row"></div>
-            {/if}
-        {/if}
-    </div>
+    <TypeArea bind:textArray bind:currentRow bind:currentIndex {calculate}/>
 {/if}
-<input type="text" onkeydown={calculate} disabled={testIsOver} bind:this={inputRef}/>
 <div class="stats">
     <div class="column">
         <div class="stats-container">
@@ -253,7 +198,6 @@
                 {#each row as char}
                     <span
                         class="overview-char"
-                        class:char--correct={char.correct === true}
                         class:char--incorrect={char.correct === false}
                     >
                         {char.char}
@@ -265,59 +209,8 @@
 {/if}
 
 <style lang="scss">
-    input {
-        opacity: 0;
-        position: absolute;
-        pointer-events: none;
-    }
-
     h1 {
         font-size: 2.5rem;
-    }
-
-    .char {
-        display: inline-block;
-        font-weight: bold;
-        width: 16px;
-        height: 28px;
-        text-align: center;
-        border-bottom: 2px solid transparent;
-        &--current {
-            border-bottom: 2px solid rgb(172, 49, 255);
-            color: rgb(172, 49, 255);
-        }
-
-        &--pending {
-            color: rgb(151, 151, 151);
-        }
-
-        &--incorrect {
-            color: rgb(255, 49, 100);
-        }
-    }
-
-    .row {
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid lightgrey;
-        height: 30px;
-        gap: 5px;
-    }
-
-    .text {
-        border: 1px solid rgba(194, 194, 194, 0.308);
-        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-        user-select: none;
-        cursor: text;
-        padding: 30px;
-        text-wrap: pretty;
-        text-align: justify;
-        font-size: 1.2rem;
-        width: calc(100% - 80px);
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        margin: 30px;
     }
 
     .overview {
