@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), recalcSpeed, gameStarted = $bindable(), gameIsPaused = $bindable() } = $props();
+    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), gameStarted = $bindable(), gameIsPaused = $bindable() } = $props();
 
     const convertSecondsInMinutes = (seconds: number) => {
         let minutes = Math.floor(seconds / 60);
@@ -35,7 +35,6 @@
                 return;
             }
             timeRemaining -= 1;
-            recalcSpeed();
             if (timeRemaining <= 0) {
                 testIsOver = true;
                 stopCountdown();

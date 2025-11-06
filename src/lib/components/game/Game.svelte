@@ -19,15 +19,15 @@
 
     let gameStarted = $state(false);
 
-    let accuracy = $state(0);
-
-    let wpm = $state(0);
-    let cpm = $state(0);
-
     let timeRemaining = $state(timeTotal);
+    let elapsedTime = $derived(timeTotal - timeRemaining);
 
     let correctTippedChars = $state(0);
     let falseTippedChars = $state(0);
+
+    let cpm = $derived(Math.floor(correctTippedChars / (elapsedTime / 60)));
+    let wpm = $derived(Math.floor(cpm / 5));
+    let accuracy = $derived((Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100))) || 0);
 
     let testIsOver = $state(false);
     let gameIsPaused = $state(false);
@@ -36,6 +36,8 @@
     let whitelist = ['Shift'];
     let currentRow = $state(0);
 
+    let textArray = $state(createTextArray(text, 22));
+
     const startNewGame = () => {
         text = '';
         textArray = [];
@@ -43,9 +45,6 @@
         currentRow = 0;
         correctTippedChars = 0;
         falseTippedChars = 0;
-        accuracy = 0;
-        wpm = 0;
-        cpm = 0;
         timeRemaining = timeTotal;
         testIsOver = false;
         gameStarted = false;
@@ -53,7 +52,63 @@
         optionsMode = true;
     };
     
-    const createTextArray = (text: string, maxCharLengthInRow: number) => {
+    const calculate = (event: KeyboardEvent) => {
+        if (testIsOver || whitelist.includes(event.key)) {
+            return;
+        }
+
+        // Get row length for easier reference
+        let rowLength = textArray[currentRow]?.length || 1;
+
+        // Count total chars in textArray
+        const totalChars = textArray.reduce((sum, row) => sum + row.length, 0);
+        // Calculate current char position
+        let charPos = 0;
+        for (let r = 0; r < currentRow; r++) {
+            charPos += textArray[r].length;
+        }
+        charPos += currentIndex;
+        if (charPos >= totalChars) {
+            testIsOver = true;
+            return;
+        }
+
+        if ((textArray[currentRow][currentIndex].char !== event.key)) {
+            textArray[currentRow][currentIndex].correct = false;
+            falseTippedChars += 1;
+            currentIndex += 1;
+
+            if (charPos + 1 >= totalChars) {
+                testIsOver = true;
+            }
+
+            // If last letter of row, move to next row
+            if (currentIndex >= rowLength) {
+                currentRow += 1;
+                currentIndex = 0;
+            }
+            return;
+        }
+
+        textArray[currentRow][currentIndex].correct = true;
+        correctTippedChars += 1;
+        currentIndex += 1;
+
+        // If last letter of row, move to next row
+        if (currentIndex >= rowLength) {
+            currentRow += 1;
+            currentIndex = 0;
+        }
+        if (charPos + 1 >= totalChars) {
+            testIsOver = true;
+        }
+
+        if (currentRow >= textArray.length) {
+            testIsOver = true;
+        }
+    };
+
+    function createTextArray(text: string, maxCharLengthInRow: number) {
         let words = text.split(' ');
         let wordsArr = [];
         let remainingCharsInRow = maxCharLengthInRow;
@@ -84,78 +139,8 @@
 
         return rows;
     }
-
-    let textArray = $state(createTextArray(text, 22));
-
-    const recalcSpeed = () => {
-        let elapsedTime = timeTotal - timeRemaining;
-        if (elapsedTime > 0) {
-            cpm = Math.floor(correctTippedChars / (elapsedTime / 60));
-            wpm = Math.floor(cpm / 5);
-        } else {
-            cpm = 0;
-            wpm = 0;
-        }
-    };
-
-    const calculate = (event: KeyboardEvent) => {
-        if (testIsOver || whitelist.includes(event.key)) {
-            return;
-        }
-
-        // Get row length for easier reference
-        let rowLength = textArray[currentRow]?.length || 1;
-
-        // Count total chars in textArray
-        const totalChars = textArray.reduce((sum, row) => sum + row.length, 0);
-        // Calculate current char position
-        let charPos = 0;
-        for (let r = 0; r < currentRow; r++) {
-            charPos += textArray[r].length;
-        }
-        charPos += currentIndex;
-        if (charPos >= totalChars) {
-            testIsOver = true;
-            return;
-        }
-
-        if ((textArray[currentRow][currentIndex].char !== event.key)) {
-            textArray[currentRow][currentIndex].correct = false;
-            falseTippedChars += 1;
-            currentIndex += 1;
-            accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
-
-            if (charPos + 1 >= totalChars) {
-                testIsOver = true;
-            }
-
-            // If last letter of row, move to next row
-            if (currentIndex >= rowLength) {
-                currentRow += 1;
-                currentIndex = 0;
-            }
-            return;
-        }
-
-        textArray[currentRow][currentIndex].correct = true;
-        correctTippedChars += 1;
-        currentIndex += 1;
-        accuracy = Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100));
-        recalcSpeed();
-        // If last letter of row, move to next row
-        if (currentIndex >= rowLength) {
-            currentRow += 1;
-            currentIndex = 0;
-        }
-        if (charPos + 1 >= totalChars) {
-            testIsOver = true;
-        }
-
-        if (currentRow >= textArray.length) {
-            testIsOver = true;
-        }
-    };
 </script>
+
 <h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
 
 {#if !testIsOver}
@@ -165,8 +150,9 @@
 {#if !gameStarted && !testIsOver}
     <button onclick="{() => gameStarted = true}" class="primary-button" disabled="{gameStarted}"> Start Game</button>
 {/if}
+
 {#if gameStarted}
-    <Timer {timeTotal} bind:timeRemaining bind:testIsOver {recalcSpeed} bind:gameStarted bind:gameIsPaused/>
+    <Timer {timeTotal} bind:timeRemaining bind:testIsOver bind:gameStarted bind:gameIsPaused/>
     <GameStats bind:wpm bind:cpm bind:accuracy bind:falseTippedChars bind:correctTippedChars/>
 {/if}
 

@@ -1,13 +1,13 @@
 <script lang="ts">
 
-    let { text = $bindable(), timeTotal = $bindable(), optionsMode = $bindable() } = $props();
+    let { text = $bindable(), minutes = $bindable(), seconds = $bindable(), optionsMode = $bindable() } = $props();
 
-    let seconds = $state('00');
-    let minutes = $state('01');
     let selectedOwnText = $state(false);
 
     let ownText = $state('');
     let selectedText = $state('');
+
+    let timeTotal: number = $derived(parseInt(minutes) * 60 + parseInt(seconds));
 
     $effect(() => {
         if (selectedOwnText && ownText.trim() !== '') {
@@ -63,7 +63,6 @@
         }
 
         seconds = secs.toString().padStart(2, '0');
-        timeTotal = parseInt(minutes) * 60 + parseInt(seconds);
     }
 
     function changeMinutes(action: 'add' | 'subtract') {
@@ -87,7 +86,6 @@
         }
 
         minutes = mins.toString().padStart(2, '0');
-        timeTotal = parseInt(minutes) * 60 + parseInt(seconds);
     }
 </script>
 

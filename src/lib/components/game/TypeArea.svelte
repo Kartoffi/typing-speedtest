@@ -43,6 +43,7 @@
             Game is paused
         </div>
     {/if}
+
     {#if textArray.length > 0 && textArray[currentRow]}
         {#if textArray[currentRow - 1]}
             <div class="row">
