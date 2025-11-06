@@ -88,7 +88,8 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    width: 80%;
+    max-width: 400px;
+    width: 100%;
     margin: 20px 0;
 
     &-timer {

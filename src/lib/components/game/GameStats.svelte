@@ -112,6 +112,7 @@
     justify-content: space-between;
     align-items: center;
     width: 90%;
+    max-width: 450px;
 
     &-container {
         width: 80px;

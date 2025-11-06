@@ -25,23 +25,24 @@
     let correctTippedChars = $state(0);
     let falseTippedChars = $state(0);
 
-    let cpm = $derived(Math.floor(correctTippedChars / (elapsedTime / 60)));
-    let wpm = $derived(Math.floor(cpm / 5));
+    let cpm = $derived(Math.floor(correctTippedChars / (elapsedTime / 60)) || 0);
+    let wpm = $derived(Math.floor(cpm / 5) || 0);
     let accuracy = $derived((Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100))) || 0);
 
     let testIsOver = $state(false);
     let gameIsPaused = $state(false);
 
-    let currentIndex = $state(0);
+    let currentLetterIndex = $state(0);
+    let currentWordIndex = $state(0);
     let whitelist = ['Shift'];
     let currentRow = $state(0);
 
-    let textArray = $state(createTextArray(text, 22));
+    let textArray = $state(createTextArrayTest(text));
 
     const startNewGame = () => {
         text = '';
         textArray = [];
-        currentIndex = 0;
+        currentLetterIndex = 0;
         currentRow = 0;
         correctTippedChars = 0;
         falseTippedChars = 0;
@@ -52,7 +53,7 @@
         optionsMode = true;
     };
     
-    const calculate = (event: KeyboardEvent) => {
+    /*const calculate = (event: KeyboardEvent) => {
         if (testIsOver || whitelist.includes(event.key)) {
             return;
         }
@@ -67,37 +68,37 @@
         for (let r = 0; r < currentRow; r++) {
             charPos += textArray[r].length;
         }
-        charPos += currentIndex;
+        charPos += currentLetterIndex;
         if (charPos >= totalChars) {
             testIsOver = true;
             return;
         }
 
-        if ((textArray[currentRow][currentIndex].char !== event.key)) {
-            textArray[currentRow][currentIndex].correct = false;
+        if ((textArray[currentRow][currentLetterIndex].char !== event.key)) {
+            textArray[currentRow][currentLetterIndex].correct = false;
             falseTippedChars += 1;
-            currentIndex += 1;
+            currentLetterIndex += 1;
 
             if (charPos + 1 >= totalChars) {
                 testIsOver = true;
             }
 
             // If last letter of row, move to next row
-            if (currentIndex >= rowLength) {
+            if (currentLetterIndex >= rowLength) {
                 currentRow += 1;
-                currentIndex = 0;
+                currentLetterIndex = 0;
             }
             return;
         }
 
-        textArray[currentRow][currentIndex].correct = true;
+        textArray[currentRow][currentLetterIndex].correct = true;
         correctTippedChars += 1;
-        currentIndex += 1;
+        currentLetterIndex += 1;
 
         // If last letter of row, move to next row
-        if (currentIndex >= rowLength) {
+        if (currentLetterIndex >= rowLength) {
             currentRow += 1;
-            currentIndex = 0;
+            currentLetterIndex = 0;
         }
         if (charPos + 1 >= totalChars) {
             testIsOver = true;
@@ -105,6 +106,49 @@
 
         if (currentRow >= textArray.length) {
             testIsOver = true;
+        }
+    };*/
+
+    const calculate = (event: KeyboardEvent) => {
+        if (testIsOver || whitelist.includes(event.key)) {
+            return;
+        }
+
+        const totalWords = textArray.length;
+        const currentWord = textArray[currentWordIndex];
+
+        if ((currentLetterIndex >= currentWord.chars.length) && (currentWordIndex >= totalWords)) {
+            testIsOver = true;
+            return;
+        }
+
+        if ((textArray[currentWordIndex].chars[currentLetterIndex].char !== event.key)) {
+            textArray[currentWordIndex].chars[currentLetterIndex].correct = false;
+            falseTippedChars += 1;
+            currentLetterIndex += 1;
+
+            if ((currentLetterIndex >= currentWord.chars.length) && (currentWordIndex + 1 >= totalWords)) {
+                testIsOver = true;
+            }
+
+            if ((currentLetterIndex >= currentWord.chars.length)) {
+                currentWordIndex++;
+                currentLetterIndex = 0;
+            }
+            return;
+        }
+
+        textArray[currentWordIndex].chars[currentLetterIndex].correct = true;
+        correctTippedChars += 1;
+        currentLetterIndex += 1;
+
+        if ((currentLetterIndex >= currentWord.chars.length) && (currentWordIndex + 1 >= totalWords)) {
+            testIsOver = true;
+        }
+
+        if ((currentLetterIndex >= currentWord.chars.length)) {
+            currentWordIndex++;
+            currentLetterIndex = 0;
         }
     };
 
@@ -139,12 +183,32 @@
 
         return rows;
     }
+
+    function createTextArrayTest(text: string) {
+        let words = text.split(' ');
+
+        let wordsArray = words.map((word): Word => {
+            return {
+                word,
+                chars: [
+                    ...word.split('').map((char): Char => ({ char, typed: false, correct: null })),
+                ]
+            };
+        });
+
+        // Add space if not last word
+        for (let i = 0; i < wordsArray.length - 1; i++) {
+            wordsArray[i].chars.push({ char: ' ', typed: false, correct: null });
+        }
+
+        return wordsArray;
+    }
 </script>
 
 <h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
 
 {#if !testIsOver}
-    <TypeArea bind:textArray bind:currentRow bind:currentIndex {calculate} bind:gameStarted bind:gameIsPaused bind:testIsOver/>
+    <TypeArea bind:textArray bind:currentWordIndex bind:currentLetterIndex {calculate} bind:gameStarted bind:gameIsPaused bind:testIsOver/>
 {/if}
 
 {#if !gameStarted && !testIsOver}

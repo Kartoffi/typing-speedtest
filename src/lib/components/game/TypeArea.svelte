@@ -5,7 +5,8 @@
     let { 
         textArray = $bindable(),
         currentRow = $bindable(),
-        currentIndex = $bindable(),
+        currentLetterIndex = $bindable(),
+        currentWordIndex = $bindable(),
         gameStarted = $bindable(),
         gameIsPaused = $bindable(),
         testIsOver = $bindable(),
@@ -43,77 +44,26 @@
             Game is paused
         </div>
     {/if}
-
-    {#if textArray.length > 0 && textArray[currentRow]}
-        {#if textArray[currentRow - 1]}
-            <div class="row">
-                {#each textArray[currentRow - 1] as char}
-                    <span
-                        class="char"
-                        class:char--correct={char.correct === true}
-                        class:char--incorrect={char.correct === false}
-                    >
-                        {char.char}
-                    </span>
-                {/each}
-            </div>
-        {:else}
-            <div class="row"></div>
-        {/if}
-        <div class="row">
-            {#each textArray[currentRow] as char, index}
+    {#each textArray as word, wordIndex}
+        <div class="word">
+            {#each word.chars as char, charIndex}
                 <span
                     class="char"
-                    class:char--current={index === currentIndex}
-                    class:char--correct={index < currentIndex && char.correct === true}
-                    class:char--incorrect={index < currentIndex && char.correct === false}
-                    class:char--pending={index > currentIndex}
+                    class:char--pending={char.correct === null}
+                    class:char--current={currentWordIndex === wordIndex && charIndex === currentLetterIndex}
+                    class:char--incorrect={char.correct === false}
+                    class:char--empty={char.char === ' '}
                 >
                     {char.char}
                 </span>
             {/each}
         </div>
-        {#if textArray[currentRow + 1]}
-            <div class="row">
-                {#each textArray[currentRow + 1] as char}
-                    <span
-                        class="char"
-                        class:char--pending={true}
-                    >
-                        {char.char}
-                    </span>
-                {/each}
-            </div>
-        {:else}
-            <div class="row"></div>
-        {/if}
-    {/if}
+    {/each}
 </div>
 
 <input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted || gameIsPaused}/>
 
 <style lang="scss">
-.char {
-    display: inline-block;
-    font-weight: bold;
-    width: 16px;
-    height: 28px;
-    text-align: center;
-    border-bottom: 2px solid transparent;
-    &--current {
-        border-bottom: 2px solid var(--primary-color);
-        color: var(--primary-color);
-    }
-
-    &--pending {
-        color: rgb(151, 151, 151);
-    }
-
-    &--incorrect {
-        color: rgb(255, 49, 100);
-    }
-}
-
 .row {
     display: flex;
     align-items: center;
@@ -123,25 +73,55 @@
 }
 
 .text {
-    position: relative;
     border: 1px solid rgba(194, 194, 194, 0.308);
     box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
     user-select: none;
     cursor: text;
     padding: 30px;
-    text-wrap: pretty;
-    text-align: justify;
     font-size: 1.2rem;
-    width: calc(100% - 80px);
     display: flex;
-    flex-direction: column;
-    gap: 16px;
     margin: 30px;
-    border: 2px solid transparent;
     outline: none;
-
+    flex-wrap: wrap;
+    max-width: 800px;
     &:focus {
         border: 2px solid rgba(173, 49, 255, 0.336);
+    }
+}
+
+.word {
+    padding-top: 20px;
+    border-bottom: 1px solid lightgrey;
+    display: flex;
+}
+
+.char {
+    width: 10px;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &--pending {
+        color: rgb(151, 151, 151);
+    }
+
+    &--current {
+        border-bottom: 2px solid var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    &--incorrect {
+        color: rgb(255, 49, 100);
+    }
+
+    &--empty {
+        min-width: 0.6rem;
+        height: 25px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
     }
 }
 
