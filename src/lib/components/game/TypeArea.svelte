@@ -1,4 +1,7 @@
 <script lang="ts">
+
+    import { onMount } from 'svelte';
+    
     let { 
         textArray = $bindable(),
         currentRow = $bindable(),
@@ -10,6 +13,17 @@
     } = $props();
 
     let inputRef: HTMLInputElement | null = null;
+
+    // Focus input on mount
+    onMount(() => {
+        if (inputRef) inputRef.focus();
+    });
+
+    $effect(() => {
+        if (gameStarted && !gameIsPaused && inputRef) {
+            inputRef.focus();
+        }
+    });
 </script>
 
 <div
