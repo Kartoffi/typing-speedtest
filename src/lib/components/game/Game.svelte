@@ -4,7 +4,7 @@
     import GameStats from '$lib/components/game/GameStats.svelte';
 	import TextResult from '$lib/components/game/TextResult.svelte';
 
-    let { text, timeTotal } = $props();
+    let { text = $bindable(), timeTotal = $bindable(), optionsMode = $bindable() } = $props();
 
     interface Char {
         char: string;
@@ -37,9 +37,8 @@
     let currentRow = $state(0);
 
     const startNewGame = () => {
-        console.log('Starting new game');
-        text = texts[Math.floor(Math.random() * texts.length)];
-        textArray = createTextArray(text, 22);
+        text = '';
+        textArray = [];
         currentIndex = 0;
         currentRow = 0;
         correctTippedChars = 0;
@@ -51,6 +50,7 @@
         testIsOver = false;
         gameStarted = false;
         gameIsPaused = false;
+        optionsMode = true;
     };
     
     const createTextArray = (text: string, maxCharLengthInRow: number) => {
