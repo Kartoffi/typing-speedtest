@@ -4,6 +4,21 @@
 
     let seconds = $state('00');
     let minutes = $state('01');
+    let selectedOwnText = $state(false);
+
+    let ownText = $state('');
+    let selectedText = $state('');
+
+    $effect(() => {
+        if (selectedOwnText && ownText.trim() !== '') {
+            text = ownText;
+            return;
+        }
+        
+        if (!selectedOwnText && selectedText !== '') {
+            text = selectedText;
+        }
+    });
 
     let texts = [
         'Die Hauskatze stammt von der Afrikanischen Wildkatze ab, auch Falbkatze genannt. Aus ihr entwickelten sich mehr als vierzig Katzenrassen. In Deutschland ist die Katze das häufigste Haustier.',
@@ -110,12 +125,22 @@
     </div>
 </div>
 <div class="text-selection-container">
-    <h3>Choose a text:</h3>
+    <h3>
+        <input type="radio" checked={!selectedOwnText} onchange={() => selectedOwnText = false}>
+        Choose a text:
+    </h3>
     {#each texts as option}
-        <button class="text-selection {(option === text) && 'checked'}" onclick={() => text = option}>
+        <button class="text-selection {(option === selectedText) && 'checked'}" onclick={() => selectedText = option} disabled={selectedOwnText}>
             {option}
         </button>
     {/each}
+    <h3>
+        <input type="radio" checked={selectedOwnText} onchange={() => selectedOwnText = true}>
+        Or your own text:
+    </h3>
+    <div>
+        <textarea rows="4" cols="50" bind:value={ownText} placeholder="Enter your custom text here..." disabled={!selectedOwnText}></textarea>
+    </div>
 </div>
 
 <button
