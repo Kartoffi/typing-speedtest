@@ -1,11 +1,5 @@
 <script lang="ts">
-    let { timeRemaining = $bindable(), timeTotal, testIsOver = $bindable(), gameStarted = $bindable(), gameIsPaused = $bindable() } = $props();
-
-    const convertSecondsInMinutes = (seconds: number) => {
-        let minutes = Math.floor(seconds / 60);
-        let remainingSeconds = seconds % 60;
-        return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-    }
+    let { timeRemaining = $bindable(), timeTotal, convertSecondsInMinutes, testIsOver = $bindable(), gameStarted = $bindable(), gameIsPaused = $bindable() } = $props();
 
     let timerId: ReturnType<typeof setTimeout> | null = null;
 

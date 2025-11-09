@@ -4,7 +4,7 @@
     import GameStats from '$lib/components/game/GameStats.svelte';
 	import TextResult from '$lib/components/game/TextResult.svelte';
 
-    let { text = $bindable(), timeTotal = $bindable(), optionsMode = $bindable() } = $props();
+    let { text = $bindable(), minutes, seconds, timeTotal = $bindable(), optionsMode = $bindable() } = $props();
 
     interface Char {
         char: string;
@@ -20,12 +20,16 @@
     let gameStarted = $state(false);
 
     let timeRemaining = $state(timeTotal);
-    let elapsedTime = $derived(timeTotal - timeRemaining);
+    let timeElapsed = $derived(timeTotal - timeRemaining);
+
+    let timeElapsedInMinutesAndSeconds = $derived(() => convertSecondsInMinutes(timeElapsed));
+    let timeTotalInMinutesAndSeconds = $derived(() => convertSecondsInMinutes(timeTotal));
+    let timeRemainingInMinutesAndSeconds = $derived(() => convertSecondsInMinutes(timeRemaining));
 
     let correctTippedChars = $state(0);
     let falseTippedChars = $state(0);
 
-    let cpm = $derived(elapsedTime > 0 ? Math.floor(correctTippedChars / (elapsedTime / 60)) : 0);
+    let cpm = $derived(timeElapsed > 0 ? Math.floor(correctTippedChars / (timeElapsed / 60)) : 0);
     let wpm = $derived(cpm > 0 ? Math.floor(cpm / 5) : 0);
     let accuracy = $derived((Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100))) || 0);
 
@@ -136,6 +140,12 @@
         }
     };
 
+    function convertSecondsInMinutes(seconds: number) {
+        let minutes = Math.floor(seconds / 60);
+        let remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    }
+
     function createTextArray(text: string) {
         let words = text.split(' ');
         let wordsArr = [];
@@ -190,8 +200,8 @@
 {/if}
 
 {#if gameStarted}
-    <Timer {timeTotal} bind:timeRemaining bind:testIsOver bind:gameStarted bind:gameIsPaused/>
-    <GameStats bind:wpm bind:cpm bind:accuracy bind:falseTippedChars bind:correctTippedChars/>
+    <Timer {timeTotal} {convertSecondsInMinutes} bind:timeRemaining bind:testIsOver bind:gameStarted bind:gameIsPaused/>
+    <GameStats bind:wpm bind:cpm bind:accuracy bind:falseTippedChars bind:correctTippedChars {testIsOver} {timeElapsedInMinutesAndSeconds} {timeTotalInMinutesAndSeconds} {timeRemainingInMinutesAndSeconds} />
 {/if}
 
 <div class="button-row">
@@ -210,8 +220,10 @@
 <style lang="scss">
     .button-row {
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         gap: 10px;
         margin: 30px 0;
+        max-width: 450px;
+        width: 100%;
     }
 </style>

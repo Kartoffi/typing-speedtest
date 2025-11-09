@@ -14,5 +14,5 @@
 {#if optionsMode}
     <Options bind:text bind:minutes bind:seconds bind:optionsMode />
 {:else}
-    <Game bind:text bind:timeTotal bind:optionsMode/>
+    <Game bind:text bind:timeTotal bind:optionsMode {minutes} {seconds}/>
 {/if}

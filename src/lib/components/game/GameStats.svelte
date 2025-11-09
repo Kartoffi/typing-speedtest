@@ -1,53 +1,77 @@
 <script lang="ts">
-    let { wpm = $bindable(), cpm = $bindable(), accuracy = $bindable(), correctTippedChars = $bindable(), falseTippedChars = $bindable() } = $props();
+    let { testIsOver, timeElapsedInMinutesAndSeconds, timeRemainingInMinutesAndSeconds, timeTotalInMinutesAndSeconds, wpm = $bindable(), cpm = $bindable(), accuracy = $bindable(), correctTippedChars = $bindable(), falseTippedChars = $bindable() } = $props();
 </script>
 
 <div class="stats">
-    <div class="column">
-        <div class="stats-container">
-            <div class="stats-value">
-                {wpm}
+    {#if testIsOver}
+        <div class="stats-time">
+            <div class="stats-container">
+                <div class="stats-value">
+                    {timeElapsedInMinutesAndSeconds()}
+                </div>
+                <div class="stats-text">
+                    Elapsed
+                </div>
             </div>
-            <div class="stats-text">
-                WPM
-            </div>
-        </div>
-        <div class="stats-container">
-            <div class="stats-value">
-                {cpm}
-            </div>
-            <div class="stats-text">
-                CPM
-            </div>
-        </div>
-    </div>
-    <div class="accuracy-container">
-        <div class="accuracy-area">
-            <div class="accuracy-percent">
-                {accuracy}
-            </div>
-            <svg class="accuracy" style="--progress: {accuracy}" viewBox="0 0 80 80" width="80" height="80">
-                <circle class="accuracy-bg"></circle>
-                <circle class="accuracy-fg"></circle>
-            </svg>
-        </div>
-        <div> Accuracy</div>
-    </div>
-    <div class="column">
-        <div class="stats-container">
-            <div class="stats-value">
-                {falseTippedChars}
-            </div>
-            <div class="stats-text">
-                False Chars
+            
+            <div class="stats-container">
+                <div class="stats-value">
+                    {timeTotalInMinutesAndSeconds()}
+                </div>
+                <div class="stats-text">
+                    Total
+                </div>
             </div>
         </div>
-        <div class="stats-container">
-            <div class="stats-value">
-                {correctTippedChars + falseTippedChars}
+    {/if}
+    
+    <div class="stats-chars">
+        <div class="column">
+            <div class="stats-container">
+                <div class="stats-value">
+                    {wpm}
+                </div>
+                <div class="stats-text">
+                    WPM
+                </div>
             </div>
-            <div class="stats-text">
-                Total Chars
+            <div class="stats-container">
+                <div class="stats-value">
+                    {cpm}
+                </div>
+                <div class="stats-text">
+                    CPM
+                </div>
+            </div>
+        </div>
+        <div class="accuracy-container">
+            <div class="accuracy-area">
+                <div class="accuracy-percent">
+                    {accuracy}
+                </div>
+                <svg class="accuracy" style="--progress: {accuracy}" viewBox="0 0 80 80" width="80" height="80">
+                    <circle class="accuracy-bg"></circle>
+                    <circle class="accuracy-fg"></circle>
+                </svg>
+            </div>
+            <div> Accuracy</div>
+        </div>
+        <div class="column">
+            <div class="stats-container">
+                <div class="stats-value">
+                    {falseTippedChars}
+                </div>
+                <div class="stats-text">
+                    False Chars
+                </div>
+            </div>
+            <div class="stats-container">
+                <div class="stats-value">
+                    {correctTippedChars + falseTippedChars}
+                </div>
+                <div class="stats-text">
+                    Total Chars
+                </div>
             </div>
         </div>
     </div>
@@ -107,12 +131,25 @@
 }
 
 .stats {
-    margin-top: 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    margin: 20px 0;
     width: 90%;
     max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+
+    &-chars {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    &-time {
+        display: flex;
+        gap: 40px;
+    }
 
     &-container {
         width: 80px;
@@ -135,5 +172,14 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+.time-total {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 </style>
