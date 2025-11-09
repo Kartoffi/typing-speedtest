@@ -1,11 +1,11 @@
 <script lang="ts">
-
     import { onMount } from 'svelte';
     
     let { 
         textArray = $bindable(),
-        currentRow = $bindable(),
-        currentLetterIndex = $bindable(),
+        textAreaWidth = $bindable(),
+        currentRowIndex = $bindable(),
+        currentCharIndex = $bindable(),
         currentWordIndex = $bindable(),
         gameStarted = $bindable(),
         gameIsPaused = $bindable(),
@@ -13,7 +13,23 @@
         calculate
     } = $props();
 
+
+    let textRef: HTMLDivElement | null = null;
     let inputRef: HTMLInputElement | null = null;
+
+    // Robust effect: update textAreaWidth when textRef is available and on resize
+    $effect(() => {
+        if (!textRef) return;
+        const update = () => {
+            if (textRef) {
+                textAreaWidth = textRef.offsetWidth - 60 - 2;
+            }
+        };
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
+    });
+
 
     // Focus input on mount
     onMount(() => {
@@ -29,6 +45,7 @@
 
 <div
     class="text"
+    bind:this={textRef}
     role="button"
     tabindex="0"
     onclick={() => inputRef && inputRef.focus()}
@@ -44,21 +61,84 @@
             Game is paused
         </div>
     {/if}
-    {#each textArray as word, wordIndex}
-        <div class="word">
-            {#each word.chars as char, charIndex}
-                <span
-                    class="char"
-                    class:char--pending={char.correct === null}
-                    class:char--current={currentWordIndex === wordIndex && charIndex === currentLetterIndex}
-                    class:char--incorrect={char.correct === false}
-                    class:char--empty={char.char === ' '}
-                >
-                    {char.char}
-                </span>
+    {#if currentRowIndex !== 0}
+        <div class="row">
+            {#each textArray[currentRowIndex - 1] as word, wordIndex}
+                <div class="word">
+                    {#each word.chars as char, charIndex}
+                        <span
+                            class="char"
+                            class:char--pending={char.correct === null}
+                            class:char--incorrect={char.correct === false}
+                            class:char--empty={char.char === ' '}
+                        >
+                            {char.char}
+                        </span>
+                    {/each}
+                </div>
             {/each}
         </div>
-    {/each}
+    {:else}
+        <div class="row">
+        </div>
+    {/if}
+    <div class="row">
+        {#each textArray[currentRowIndex] as word, wordIndex}
+            <div class="word">
+                {#each word.chars as char, charIndex}
+                    <span
+                        class="char"
+                        class:char--pending={char.correct === null}
+                        class:char--current={currentWordIndex === wordIndex && charIndex === currentCharIndex && !gameIsPaused}
+                        class:char--incorrect={char.correct === false}
+                        class:char--empty={char.char === ' '}
+                    >
+                        {char.char}
+                    </span>
+                {/each}
+            </div>
+        {/each}
+    </div>
+    {#if currentRowIndex < textArray.length - 1}
+        <div class="row">
+            {#each textArray[currentRowIndex + 1] as word, wordIndex}
+                <div class="word">
+                    {#each word.chars as char, charIndex}
+                        <span
+                            class="char"
+                            class:char--pending={char.correct === null}
+                            class:char--incorrect={char.correct === false}
+                            class:char--empty={char.char === ' '}
+                        >
+                            {char.char}
+                        </span>
+                    {/each}
+                </div>
+            {/each}
+        </div>
+    {:else}
+        <div class="row">
+        </div>
+    {/if}
+    <!-- {#each textArray as row, rowIndex}
+        <div class="row">
+            {#each row as word, wordIndex}
+                <div class="word">
+                    {#each word.chars as char, charIndex}
+                        <span
+                            class="char"
+                            class:char--pending={char.correct === null}
+                            class:char--current={currentWordIndex === wordIndex && charIndex === currentCharIndex && rowIndex === currentRowIndex}
+                            class:char--incorrect={char.correct === false}
+                            class:char--empty={char.char === ' '}
+                        >
+                            {char.char}
+                        </span>
+                    {/each}
+                </div>
+            {/each}
+        </div>
+    {/each} -->
 </div>
 
 <input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted || gameIsPaused}/>
@@ -69,10 +149,11 @@
     align-items: center;
     border-bottom: 1px solid lightgrey;
     height: 30px;
-    gap: 5px;
+    width: 100%;
 }
 
 .text {
+    position: relative;
     border: 1px solid rgba(194, 194, 194, 0.308);
     box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
     user-select: none;
@@ -83,20 +164,19 @@
     margin: 30px;
     outline: none;
     flex-wrap: wrap;
-    max-width: 800px;
+    width: 800px;
+    gap: 10px;
     &:focus {
         border: 2px solid rgba(173, 49, 255, 0.336);
     }
 }
 
 .word {
-    padding-top: 20px;
-    border-bottom: 1px solid lightgrey;
     display: flex;
 }
 
 .char {
-    width: 10px;
+    width: 16px;
     border-bottom: 2px solid transparent;
     display: flex;
     align-items: center;
@@ -144,4 +224,5 @@ input {
     font-size: 2rem;
     color: rgba(0, 0, 0, 0.733);
 }
+
 </style>

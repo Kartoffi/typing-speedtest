@@ -32,18 +32,43 @@
     let testIsOver = $state(false);
     let gameIsPaused = $state(false);
 
-    let currentLetterIndex = $state(0);
+    let currentCharIndex = $state(0);
     let currentWordIndex = $state(0);
     let whitelist = ['Shift'];
-    let currentRow = $state(0);
 
-    let textArray = $state(createTextArrayTest(text));
+    // get the current width of the text area
+    let textAreaWidth = $state(0);
+    let currentRowIndex = $state(0);
+
+    let textArray = $state(createTextArray(text));
+
+    let totalWords = $derived(() => {
+        let count = 0;
+        for (let row of textArray) {
+            count += row.length;
+        }
+        return count;
+    });
+
+    let totalChars = $derived(() => {
+        let count = 0;
+        for (let row of textArray) {
+            for (let word of row) {
+                count += word.chars.length;
+            }
+        }
+        return count;
+    });
+
+    $effect(() => {
+        textArray = createTextArray(text);
+    });
 
     const startNewGame = () => {
         text = '';
         textArray = [];
-        currentLetterIndex = 0;
-        currentRow = 0;
+        currentCharIndex = 0;
+        currentRowIndex = 0;
         correctTippedChars = 0;
         falseTippedChars = 0;
         timeRemaining = timeTotal;
@@ -52,111 +77,56 @@
         gameIsPaused = false;
         optionsMode = true;
     };
-    
-    /*const calculate = (event: KeyboardEvent) => {
-        if (testIsOver || whitelist.includes(event.key)) {
-            return;
-        }
-
-        // Get row length for easier reference
-        let rowLength = textArray[currentRow]?.length || 1;
-
-        // Count total chars in textArray
-        const totalChars = textArray.reduce((sum, row) => sum + row.length, 0);
-        // Calculate current char position
-        let charPos = 0;
-        for (let r = 0; r < currentRow; r++) {
-            charPos += textArray[r].length;
-        }
-        charPos += currentLetterIndex;
-        if (charPos >= totalChars) {
-            testIsOver = true;
-            return;
-        }
-
-        if ((textArray[currentRow][currentLetterIndex].char !== event.key)) {
-            textArray[currentRow][currentLetterIndex].correct = false;
-            falseTippedChars += 1;
-            currentLetterIndex += 1;
-
-            if (charPos + 1 >= totalChars) {
-                testIsOver = true;
-            }
-
-            // If last letter of row, move to next row
-            if (currentLetterIndex >= rowLength) {
-                currentRow += 1;
-                currentLetterIndex = 0;
-            }
-            return;
-        }
-
-        textArray[currentRow][currentLetterIndex].correct = true;
-        correctTippedChars += 1;
-        currentLetterIndex += 1;
-
-        // If last letter of row, move to next row
-        if (currentLetterIndex >= rowLength) {
-            currentRow += 1;
-            currentLetterIndex = 0;
-        }
-        if (charPos + 1 >= totalChars) {
-            testIsOver = true;
-        }
-
-        if (currentRow >= textArray.length) {
-            testIsOver = true;
-        }
-    };*/
 
     const calculate = (event: KeyboardEvent) => {
         if (testIsOver || whitelist.includes(event.key)) {
             return;
         }
 
-        const totalWords = textArray.length;
-        const currentWord = textArray[currentWordIndex];
+        let lastRowIndex = textArray.length - 1;
+        let lastWordIndex = textArray[lastRowIndex].length - 1;
+        let lastCharIndex = textArray[lastRowIndex][lastWordIndex].chars.length - 1;
 
-        if ((currentLetterIndex >= currentWord.chars.length) && (currentWordIndex >= totalWords)) {
+        if (currentRowIndex === lastRowIndex &&
+            currentWordIndex === lastWordIndex &&
+            currentCharIndex === lastCharIndex) {
             testIsOver = true;
             return;
         }
 
-        if ((textArray[currentWordIndex].chars[currentLetterIndex].char !== event.key)) {
-            textArray[currentWordIndex].chars[currentLetterIndex].correct = false;
+        if (textArray[currentRowIndex][currentWordIndex].chars[currentCharIndex].char === event.key) {
+            textArray[currentRowIndex][currentWordIndex].chars[currentCharIndex].typed = true;
+            textArray[currentRowIndex][currentWordIndex].chars[currentCharIndex].correct = true;
+            correctTippedChars += 1;
+        } else {
+            textArray[currentRowIndex][currentWordIndex].chars[currentCharIndex].typed = true;
+            textArray[currentRowIndex][currentWordIndex].chars[currentCharIndex].correct = false;
             falseTippedChars += 1;
-            currentLetterIndex += 1;
-
-            if ((currentLetterIndex >= currentWord.chars.length) && (currentWordIndex + 1 >= totalWords)) {
-                testIsOver = true;
-            }
-
-            if ((currentLetterIndex >= currentWord.chars.length)) {
-                currentWordIndex++;
-                currentLetterIndex = 0;
-            }
-            return;
         }
 
-        textArray[currentWordIndex].chars[currentLetterIndex].correct = true;
-        correctTippedChars += 1;
-        currentLetterIndex += 1;
-
-        if ((currentLetterIndex >= currentWord.chars.length) && (currentWordIndex + 1 >= totalWords)) {
-            testIsOver = true;
-        }
-
-        if ((currentLetterIndex >= currentWord.chars.length)) {
-            currentWordIndex++;
-            currentLetterIndex = 0;
+        // Move to next char
+        if (currentCharIndex < textArray[currentRowIndex][currentWordIndex].chars.length - 1) {
+            currentCharIndex += 1;
+        } else {
+            // Move to next word
+            currentCharIndex = 0;
+            if (currentWordIndex < textArray[currentRowIndex].length - 1) {
+                currentWordIndex += 1;
+            } else {
+                // Move to next row
+                currentWordIndex = 0;
+                if (currentRowIndex < textArray.length - 1) {
+                    currentRowIndex += 1;
+                }
+            }
         }
     };
 
-    function createTextArray(text: string, maxCharLengthInRow: number) {
+    function createTextArray(text: string) {
         let words = text.split(' ');
         let wordsArr = [];
-        let remainingCharsInRow = maxCharLengthInRow;
-        let rows: Char[][] = [[]];
+        let rows: Word[][] = [];
+        let currentAmountOfCharsInRow = 0;
 
         wordsArr = words.map((word): Word => {
             return {
@@ -165,50 +135,40 @@
             };
         });
 
-        wordsArr.forEach((wordObj, i) => {
-            // +1 for space between words, except at the start of a row
-            let wordLengthWithSpace = wordObj.word.length + (rows[rows.length - 1].length > 0 ? 1 : 0);
-            if (wordLengthWithSpace > remainingCharsInRow) {
-                rows.push([]);
-                remainingCharsInRow = maxCharLengthInRow;
+        wordsArr.map((word) => {
+            
+            // if word is last one in wordsArr
+            if (!(wordsArr.indexOf(word) === wordsArr.length - 1)) {
+                word.chars.push({ char: ' ', typed: false, correct: null });
             }
-            // Add space if not first word in row
-            if (rows[rows.length - 1].length > 0) {
-                rows[rows.length - 1].push({ char: ' ', typed: false, correct: null });
-                remainingCharsInRow -= 1;
-            }
-            rows[rows.length - 1].push(...wordObj.chars);
-            remainingCharsInRow -= wordObj.word.length;
+
         });
 
-        return rows;
-    }
-
-    function createTextArrayTest(text: string) {
-        let words = text.split(' ');
-
-        let wordsArray = words.map((word): Word => {
-            return {
-                word,
-                chars: [
-                    ...word.split('').map((char): Char => ({ char, typed: false, correct: null })),
-                ]
-            };
-        });
-
-        // Add space if not last word
-        for (let i = 0; i < wordsArray.length - 1; i++) {
-            wordsArray[i].chars.push({ char: ' ', typed: false, correct: null });
+        let row: Word[] = [];
+        for (let i = 0; i < wordsArr.length; i++) {
+            const word = wordsArr[i];
+            const wordLength = word.chars.length;
+            // If adding this word would exceed the row limit, start a new row
+            if ((currentAmountOfCharsInRow + wordLength) * 16 > textAreaWidth && row.length > 0) {
+                rows.push(row);
+                row = [];
+                currentAmountOfCharsInRow = 0;
+            }
+            row.push(word);
+            currentAmountOfCharsInRow += wordLength;
         }
-
-        return wordsArray;
+        // Push the last row if it has any words
+        if (row.length > 0) {
+            rows.push(row);
+        }
+        return rows;
     }
 </script>
 
 <h1> {testIsOver ? 'Test Over!' : 'Typing Speed-Test'} </h1>
 
 {#if !testIsOver}
-    <TypeArea bind:textArray bind:currentWordIndex bind:currentLetterIndex {calculate} bind:gameStarted bind:gameIsPaused bind:testIsOver/>
+    <TypeArea bind:textAreaWidth bind:textArray bind:currentRowIndex bind:currentWordIndex bind:currentCharIndex {calculate} bind:gameStarted bind:gameIsPaused bind:testIsOver/>
 {/if}
 
 {#if !gameStarted && !testIsOver}
