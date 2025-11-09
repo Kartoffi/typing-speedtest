@@ -148,7 +148,8 @@
     margin: 30px;
     outline: none;
     flex-wrap: wrap;
-    width: 800px;
+    max-width: 800px;
+    width: 100%;
     gap: 10px;
     &:focus {
         border: 2px solid rgba(173, 49, 255, 0.336);

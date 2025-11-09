@@ -36,7 +36,8 @@
     margin: 30px;
     outline: none;
     flex-wrap: wrap;
-    width: 800px;
+    max-width: 800px;
+    width: 100%;
     gap: 10px;
     max-height: 200px;
     overflow-y: auto;
