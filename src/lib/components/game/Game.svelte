@@ -25,8 +25,8 @@
     let correctTippedChars = $state(0);
     let falseTippedChars = $state(0);
 
-    let cpm = $derived(Math.floor(correctTippedChars / (elapsedTime / 60)) || 0);
-    let wpm = $derived(Math.floor(cpm / 5) || 0);
+    let cpm = $derived(elapsedTime > 0 ? Math.floor(correctTippedChars / (elapsedTime / 60)) : 0);
+    let wpm = $derived(cpm > 0 ? Math.floor(cpm / 5) : 0);
     let accuracy = $derived((Math.max(0, Math.floor(((correctTippedChars) / (correctTippedChars + falseTippedChars)) * 100))) || 0);
 
     let testIsOver = $state(false);
@@ -69,6 +69,7 @@
         textArray = [];
         currentCharIndex = 0;
         currentRowIndex = 0;
+        currentWordIndex = 0;
         correctTippedChars = 0;
         falseTippedChars = 0;
         timeRemaining = timeTotal;
@@ -77,6 +78,19 @@
         gameIsPaused = false;
         optionsMode = true;
     };
+
+    const restartGame = () => {
+        textArray = createTextArray(text);
+        currentCharIndex = 0;
+        currentRowIndex = 0;
+        currentWordIndex = 0;
+        correctTippedChars = 0;
+        falseTippedChars = 0;
+        timeRemaining = timeTotal;
+        testIsOver = false;
+        gameStarted = false;
+        gameIsPaused = false;
+    }
 
     const calculate = (event: KeyboardEvent) => {
         if (testIsOver || whitelist.includes(event.key)) {
@@ -180,7 +194,24 @@
     <GameStats bind:wpm bind:cpm bind:accuracy bind:falseTippedChars bind:correctTippedChars/>
 {/if}
 
+<div class="button-row">
+    {#if gameStarted}
+        <button class="primary-button" onclick="{restartGame}"> Restart Game </button>
+    {/if}
+    {#if testIsOver}
+        <button class="primary-button" onclick="{startNewGame}"> New Game </button>
+    {/if}
+</div>
+
 {#if testIsOver}
     <TextResult {textArray} />
-    <button class="primary-button" onclick="{startNewGame}"> New Game </button>
 {/if}
+
+<style lang="scss">
+    .button-row {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 30px 0;
+    }
+</style>
