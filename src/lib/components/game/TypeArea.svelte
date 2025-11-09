@@ -71,6 +71,7 @@
                             class:char--pending={char.correct === null}
                             class:char--incorrect={char.correct === false}
                             class:char--empty={char.char === ' '}
+                            class:char--empty-incorrect={char.char === ' ' && char.correct === false}
                         >
                             {char.char}
                         </span>
@@ -92,6 +93,7 @@
                         class:char--current={currentWordIndex === wordIndex && charIndex === currentCharIndex && !gameIsPaused}
                         class:char--incorrect={char.correct === false}
                         class:char--empty={char.char === ' '}
+                        class:char--empty-incorrect={char.char === ' ' && char.correct === false}
                     >
                         {char.char}
                     </span>
@@ -109,6 +111,7 @@
                             class:char--pending={char.correct === null}
                             class:char--incorrect={char.correct === false}
                             class:char--empty={char.char === ' '}
+                            class:char--empty-incorrect={char.char === ' ' && char.correct === false}
                         >
                             {char.char}
                         </span>
@@ -120,25 +123,6 @@
         <div class="row">
         </div>
     {/if}
-    <!-- {#each textArray as row, rowIndex}
-        <div class="row">
-            {#each row as word, wordIndex}
-                <div class="word">
-                    {#each word.chars as char, charIndex}
-                        <span
-                            class="char"
-                            class:char--pending={char.correct === null}
-                            class:char--current={currentWordIndex === wordIndex && charIndex === currentCharIndex && rowIndex === currentRowIndex}
-                            class:char--incorrect={char.correct === false}
-                            class:char--empty={char.char === ' '}
-                        >
-                            {char.char}
-                        </span>
-                    {/each}
-                </div>
-            {/each}
-        </div>
-    {/each} -->
 </div>
 
 <input type="text" onkeydown={calculate} bind:this={inputRef} disabled={!gameStarted || gameIsPaused}/>
@@ -202,6 +186,10 @@
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
+
+        &-incorrect::after {
+            content: '_';
+        }
     }
 }
 
