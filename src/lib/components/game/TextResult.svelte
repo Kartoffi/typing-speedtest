@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { textArray } = $props();
+    let { textArray = $bindable() } = $props();
 </script>
 
 <div class="overview">
@@ -37,7 +37,7 @@
     outline: none;
     flex-wrap: wrap;
     max-width: 800px;
-    width: 100%;
+    width: calc(100% - 60px);
     gap: 10px;
     max-height: 200px;
     overflow-y: auto;

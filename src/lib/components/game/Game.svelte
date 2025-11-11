@@ -214,7 +214,7 @@
 </div>
 
 {#if testIsOver}
-    <TextResult {textArray} />
+    <TextResult bind:textArray />
 {/if}
 
 <style lang="scss">
